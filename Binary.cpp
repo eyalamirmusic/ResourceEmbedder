@@ -1,3 +1,3 @@
-#include "Binary.h"
+#include "Lib/ResourceEmbedLib.h"
 
-static const Resources::Array binary {"Data", std::to_array<unsigned char>({1, 2, 3})};
+static const auto binary = Resources::Data("Data", {1, 2, 3});

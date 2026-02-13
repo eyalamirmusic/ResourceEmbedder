@@ -1,4 +1,4 @@
-#include "Binary.h"
+#include "ResourceEmbedLib.h"
 
 int main()
 {
