@@ -1,43 +1,39 @@
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
+using Data = std::vector<unsigned char>;
 
+template <typename T>
+using Iterator = std::istreambuf_iterator<T>;
 
-int main(int argc, char* argv[])
+Data readDataFrom(const std::string& path)
 {
-    if (argc != 4)
-    {
-        std::cerr << "Usage: ResourceGenerator <input_file> <output_cpp> <resource_name>\n";
-        return EXIT_FAILURE;
-    }
+    auto in = std::ifstream(path, std::ios::binary);
 
-    const char* inputPath = argv[1];
-    const char* outputPath = argv[2];
-    const char* resourceName = argv[3];
-
-    std::ifstream in(inputPath, std::ios::binary);
     if (!in)
-    {
-        std::cerr << "Error: cannot open input file: " << inputPath << "\n";
-        return EXIT_FAILURE;
-    }
+        throw std::runtime_error("Error: cannot open input file: " + path);
 
-    std::vector<unsigned char> data(
-        (std::istreambuf_iterator<char>(in)),
-        std::istreambuf_iterator<char>());
+    auto data = Data(Iterator(in), Iterator<char>());
     in.close();
 
-    std::ofstream out(outputPath);
+    return data;
+}
+
+void run(const std::string& input,
+         const std::string& output,
+         const std::string& resource)
+{
+    auto data = readDataFrom(input);
+
+    auto out = std::ofstream(output);
+
     if (!out)
-    {
-        std::cerr << "Error: cannot open output file: " << outputPath << "\n";
-        return EXIT_FAILURE;
-    }
+        throw std::runtime_error("Error: cannot open output file: " + output);
 
     out << "#include \"ResourceEmbedLib.h\"\n\n";
-    out << "static const auto resource = Resources::Data(\"" << resourceName << "\", {\n";
+    out << "static const auto resource = Resources::Data(\"" << resource
+        << "\", {\n";
 
     for (size_t i = 0; i < data.size(); ++i)
     {
@@ -58,8 +54,28 @@ int main(int argc, char* argv[])
     out << "});\n";
 
     if (!out)
+        throw std::runtime_error("Error: failed to write output file: " + output);
+}
+
+void validateArgs(int argc)
+{
+    if (argc != 4)
     {
-        std::cerr << "Error: failed to write output file: " << outputPath << "\n";
+        throw std::runtime_error(
+            "Usage: ResourceGenerator <input_file> <output_cpp> <resource_name>");
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    try
+    {
+        validateArgs(argc);
+        run(argv[1], argv[2], argv[3]);
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
