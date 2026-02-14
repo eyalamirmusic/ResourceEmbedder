@@ -1,5 +1,5 @@
 function(embed_resources TARGET)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY" "FILES")
 
     if(NOT ARG_CATEGORY)
         set(ARG_CATEGORY "Resources")
@@ -10,7 +10,7 @@ function(embed_resources TARGET)
         set(RESOURCE_INDEX 1)
     endif()
 
-    foreach(INPUT_FILE IN LISTS ARG_UNPARSED_ARGUMENTS)
+    foreach(INPUT_FILE IN LISTS ARG_FILES)
         cmake_path(IS_ABSOLUTE INPUT_FILE IS_ABS)
         if(IS_ABS)
             set(ABSOLUTE_INPUT "${INPUT_FILE}")
@@ -34,18 +34,15 @@ function(embed_resources TARGET)
     set_target_properties(${TARGET} PROPERTIES RESOURCE_EMBED_INDEX ${RESOURCE_INDEX})
 endfunction()
 
-function(embed_resource_directory TARGET DIRECTORY)
-    cmake_parse_arguments(PARSE_ARGV 2 ARG "" "CATEGORY" "")
+function(embed_resource_directory TARGET)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;DIRECTORY" "")
 
-    file(GLOB_RECURSE FILES "${DIRECTORY}/*.*")
+    file(GLOB_RECURSE FILES "${ARG_DIRECTORY}/*.*")
 
-    foreach(FILE IN LISTS FILES)
-        if(ARG_CATEGORY)
-            embed_resources(${TARGET} CATEGORY "${ARG_CATEGORY}" ${FILE})
-        else()
-            embed_resources(${TARGET} ${FILE})
-        endif()
-    endforeach ()
+    set(FORWARD_ARGS FILES ${FILES})
+    if(DEFINED ARG_CATEGORY)
+        list(APPEND FORWARD_ARGS CATEGORY "${ARG_CATEGORY}")
+    endif()
 
-
+    embed_resources(${TARGET} ${FORWARD_ARGS})
 endfunction()
