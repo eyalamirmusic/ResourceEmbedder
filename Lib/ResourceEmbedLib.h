@@ -8,9 +8,12 @@
 namespace Resources
 {
 using Storage = std::vector<unsigned char>;
-using Map = std::map<std::string, Storage>;
+using ResourceMap = std::map<std::string, Storage>;
+using CategoryMap = std::map<std::string, ResourceMap>;
 using RawData = std::initializer_list<unsigned char>;
 using View = std::span<const unsigned char>;
+
+inline constexpr auto DefaultCategory = "Resources";
 
 struct DataView
 {
@@ -37,10 +40,10 @@ struct DataView
     View dataView;
 };
 
-DataView get(const std::string& name);
+DataView get(const std::string& name, const std::string& category = DefaultCategory);
 
 struct Data
 {
-    Data(const std::string& name, const RawData& rawData);
+    Data(const std::string& name, const RawData& rawData, const std::string& category = DefaultCategory);
 };
 } // namespace Resources

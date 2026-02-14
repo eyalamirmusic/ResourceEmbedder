@@ -20,19 +20,25 @@ Data readDataFrom(const std::string& path)
     return data;
 }
 
-void run(const std::string& input,
-         const std::string& output,
-         const std::string& resource)
+struct ProgramArgs
 {
-    auto data = readDataFrom(input);
+    std::string input;
+    std::string output;
+    std::string resource;
+    std::string category = "Resources";
+};
 
-    auto out = std::ofstream(output);
+void run(const ProgramArgs& args)
+{
+    auto data = readDataFrom(args.input);
+
+    auto out = std::ofstream(args.output);
 
     if (!out)
-        throw std::runtime_error("Error: cannot open output file: " + output);
+        throw std::runtime_error("Error: cannot open output file: " + args.output);
 
     out << "#include \"ResourceEmbedLib.h\"\n\n";
-    out << "static const auto resource = Resources::Data(\"" << resource
+    out << "static const auto resource = Resources::Data(\"" << args.resource
         << "\", {\n";
 
     for (size_t i = 0; i < data.size(); ++i)
@@ -51,27 +57,41 @@ void run(const std::string& input,
             out << " ";
     }
 
-    out << "});\n";
+    out << "}, \"" << args.category << "\");\n";
 
     if (!out)
-        throw std::runtime_error("Error: failed to write output file: " + output);
-}
-
-void validateArgs(int argc)
-{
-    if (argc != 4)
     {
         throw std::runtime_error(
-            "Usage: ResourceGenerator <input_file> <output_cpp> <resource_name>");
+            "Error: failed to write output file: " + args.output);
     }
+}
+
+ProgramArgs getArgs(int argc, char* argv[])
+{
+    if (argc < 4 || argc > 5)
+    {
+        throw std::runtime_error(
+            "Usage: ResourceGenerator <input_file> <output_cpp> <resource_name> [category]");
+    }
+
+    auto args = ProgramArgs();
+
+    args.input = argv[1];
+    args.output = argv[2];
+    args.resource = argv[3];
+
+    if (argc == 5)
+        args.category = argv[4];
+
+    return args;
 }
 
 int main(int argc, char* argv[])
 {
     try
     {
-        validateArgs(argc);
-        run(argv[1], argv[2], argv[3]);
+        auto args = getArgs(argc, argv);
+        run(args);
     }
     catch (std::exception& e)
     {

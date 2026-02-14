@@ -2,19 +2,19 @@
 
 namespace Resources
 {
-Map& getMap()
+CategoryMap& getMap()
 {
-    static Map map;
+    static CategoryMap map;
     return map;
 }
 
-DataView get(const std::string& name)
+DataView get(const std::string& name, const std::string& category)
 {
-    return {getMap()[name]};
+    return {getMap()[category][name]};
 }
 
-Data::Data(const std::string& name, const RawData& rawData)
+Data::Data(const std::string& name, const RawData& rawData, const std::string& category)
 {
-    getMap()[name] = rawData;
+    getMap()[category][name] = rawData;
 }
 } // namespace Resources
