@@ -10,11 +10,16 @@ CategoryMap& getMap()
 
 DataView get(const std::string& name, const std::string& category)
 {
-    return {getMap()[category][name]};
+    return {getCategory(category)[name]};
+}
+
+ResourceMap& getCategory(const std::string& category)
+{
+    return getMap()[category];
 }
 
 Data::Data(const std::string& name, const RawData& rawData, const std::string& category)
 {
-    getMap()[category][name] = rawData;
+    getCategory(category)[name] = rawData;
 }
 } // namespace Resources

@@ -35,12 +35,14 @@ struct DataView
     size_t size() const { return dataView.size(); }
     int getSize() const { return static_cast<int>(size()); }
 
-    std::string toString() const { return {asCharPointer(), size()}; };
+    std::string toString() const { return {asCharPointer(), size()}; }
 
     View dataView;
 };
 
 DataView get(const std::string& name, const std::string& category = DefaultCategory);
+
+ResourceMap& getCategory(const std::string& category);
 
 struct Data
 {
