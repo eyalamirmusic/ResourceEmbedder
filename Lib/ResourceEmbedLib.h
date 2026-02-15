@@ -1,17 +1,26 @@
 #pragma once
 
-#include <vector>
+#include <stddef.h>
+
+typedef struct
+{
+    const char* name;
+    const char* category;
+    const unsigned char* data;
+    size_t size;
+} ResourceEntry;
+
+#ifdef __cplusplus
+
 #include <map>
 #include <span>
 #include <string>
 
 namespace Resources
 {
-using Storage = std::vector<unsigned char>;
-using ResourceMap = std::map<std::string, Storage>;
-using CategoryMap = std::map<std::string, ResourceMap>;
-using RawData = std::initializer_list<unsigned char>;
 using View = std::span<const unsigned char>;
+using ResourceMap = std::map<std::string, View>;
+using CategoryMap = std::map<std::string, ResourceMap>;
 
 inline constexpr auto DefaultCategory = "Resources";
 
@@ -44,8 +53,7 @@ DataView get(const std::string& name, const std::string& category = DefaultCateg
 
 ResourceMap& getCategory(const std::string& category);
 
-struct Data
-{
-    Data(const std::string& name, const RawData& rawData, const std::string& category = DefaultCategory);
-};
+void registerEntries(const ResourceEntry* entries, size_t count);
 } // namespace Resources
+
+#endif
