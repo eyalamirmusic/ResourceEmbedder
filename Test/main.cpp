@@ -1,4 +1,4 @@
-#include "ResourceEmbedLib.h"
+#include "BinaryData.h"
 #include <iostream>
 
 void printResource(const std::string& name)
@@ -10,7 +10,7 @@ void printResource(const std::string& name)
 int main()
 {
     printResource("data.bin");
-    auto d = Resources::get("data2.txt");
-    std::cout << d.toString() << std::endl;
+    printResource("data2.txt");
+
     return 0;
 }
