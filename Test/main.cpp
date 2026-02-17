@@ -11,7 +11,7 @@ int main()
 {
     printResource("data.bin");
     printResource("data2.txt");
-    printResource("Data With Space.txt");
+    printResource("SRC-ND_INST-Clap_NAME-Shlap!.flac");
 
     return 0;
 }

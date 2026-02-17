@@ -28,6 +28,12 @@ function(embed_resources TARGET)
 
         set(OUTPUT_C "${GENERATED_DIR}/BinaryResource${FILE_INDEX}.c")
 
+        target_sources(${TARGET} PRIVATE ${ABSOLUTE_INPUT})
+
+        set_source_files_properties(
+                ${ABSOLUTE_INPUT}
+                PROPERTIES HEADER_FILE_ONLY TRUE
+        )
         add_custom_command(
             OUTPUT "${OUTPUT_C}"
             COMMAND ResourceGenerator embed "${ABSOLUTE_INPUT}" "${OUTPUT_C}" "${FILE_INDEX}"
@@ -49,13 +55,8 @@ function(embed_resources TARGET)
         COMMENT "Generating ${ARG_NAMESPACE}.h and ${ARG_NAMESPACE}.cpp"
     )
 
-    get_target_property(INIT_ADDED ${TARGET} RESOURCE_EMBED_INIT_ADDED)
-    if(NOT INIT_ADDED)
-        target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
-        target_link_libraries(${TARGET} PUBLIC ResourceEmbedLib)
-        set_target_properties(${TARGET} PROPERTIES RESOURCE_EMBED_INIT_ADDED TRUE)
-    endif()
-
+    target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
+    target_link_libraries(${TARGET} PUBLIC ResourceEmbedLib)
     target_sources(${TARGET} PRIVATE ${GENERATED_C_FILES} "${ENTRIES_CPP}" "${HEADER_FILE}")
 endfunction()
 
