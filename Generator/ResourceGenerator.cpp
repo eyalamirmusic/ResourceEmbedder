@@ -60,12 +60,14 @@ struct EmbedArgs
 {
     std::string cppOutput;
     std::string category;
+    std::string namespaceName;
     std::vector<std::string> inputFiles;
 };
 
 struct InitArgs
 {
     std::string headerOutput;
+    std::string namespaceName;
 };
 
 void writeDataFile(const std::string& input,
@@ -125,11 +127,11 @@ void writeEntriesCpp(const EmbedArgs& args)
         out << "extern const unsigned long " << varPrefix << "_size;\n";
     }
 
-    out << "\nnamespace Resources\n";
+    out << "\nnamespace " << args.namespaceName << "\n";
     out << "{\n";
-    out << "const Entries& getResourceEntries()\n";
+    out << "const Resources::Entries& getResourceEntries()\n";
     out << "{\n";
-    out << "    static const Entries entries = {\n";
+    out << "    static const Resources::Entries entries = {\n";
 
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
@@ -167,10 +169,10 @@ void writeInitHeader(const InitArgs& args)
 
     out << "#pragma once\n\n";
     out << "#include \"ResourceEmbedLib.h\"\n\n";
-    out << "namespace Resources\n";
+    out << "namespace " << args.namespaceName << "\n";
     out << "{\n";
-    out << "const Entries& getResourceEntries();\n";
-    out << "static const Initializer resourceInitializer "
+    out << "const Resources::Entries& getResourceEntries();\n";
+    out << "static const Resources::Initializer resourceInitializer "
         << "{getResourceEntries()};\n";
     out << "}\n";
 
@@ -183,18 +185,19 @@ void writeInitHeader(const InitArgs& args)
 
 EmbedArgs getEmbedArgs(int argc, char* argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
         throw std::runtime_error(
             "Usage: ResourceGenerator embed <cpp_output> <category> "
-            "<file1,file2,...>");
+            "<namespace> <file1,file2,...>");
     }
 
     auto args = EmbedArgs();
 
     args.cppOutput = argv[0];
     args.category = argv[1];
-    args.inputFiles = splitComma(argv[2]);
+    args.namespaceName = argv[2];
+    args.inputFiles = splitComma(argv[3]);
 
     if (args.inputFiles.empty())
         throw std::runtime_error("Error: no input files specified");
@@ -204,13 +207,13 @@ EmbedArgs getEmbedArgs(int argc, char* argv[])
 
 InitArgs getInitArgs(int argc, char* argv[])
 {
-    if (argc != 1)
+    if (argc != 2)
     {
         throw std::runtime_error(
-            "Usage: ResourceGenerator init <header_output>");
+            "Usage: ResourceGenerator init <header_output> <namespace>");
     }
 
-    return {argv[0]};
+    return {argv[0], argv[1]};
 }
 
 void writeResources(const EmbedArgs& args)

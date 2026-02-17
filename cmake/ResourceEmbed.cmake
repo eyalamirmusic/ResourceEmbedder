@@ -1,20 +1,19 @@
 function(embed_resources TARGET)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;HEADER" "FILES")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;NAMESPACE" "FILES")
 
     if(NOT ARG_CATEGORY)
         set(ARG_CATEGORY "Resources")
     endif()
 
-    if(NOT ARG_HEADER)
-        set(ARG_HEADER "ResourceData.h")
+    if(NOT ARG_NAMESPACE)
+        set(ARG_NAMESPACE "ResourceData")
     endif()
 
-    get_filename_component(HEADER_STEM "${ARG_HEADER}" NAME_WE)
-    set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HEADER_STEM}")
+    set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAMESPACE}")
     file(MAKE_DIRECTORY "${GENERATED_DIR}")
 
-    set(HEADER_FILE "${GENERATED_DIR}/${ARG_HEADER}")
-    set(ENTRIES_CPP "${GENERATED_DIR}/${HEADER_STEM}.cpp")
+    set(HEADER_FILE "${GENERATED_DIR}/${ARG_NAMESPACE}.h")
+    set(ENTRIES_CPP "${GENERATED_DIR}/${ARG_NAMESPACE}.cpp")
     set(GENERATED_C_FILES "")
     set(ABSOLUTE_FILES "")
 
@@ -36,7 +35,7 @@ function(embed_resources TARGET)
 
     add_custom_command(
         OUTPUT ${GENERATED_C_FILES} "${ENTRIES_CPP}"
-        COMMAND ResourceGenerator embed "${ENTRIES_CPP}" "${ARG_CATEGORY}" "${FILES_CSV}"
+        COMMAND ResourceGenerator embed "${ENTRIES_CPP}" "${ARG_CATEGORY}" "${ARG_NAMESPACE}" "${FILES_CSV}"
         DEPENDS ${ABSOLUTE_FILES} ResourceGenerator
         COMMENT "Embedding ${ARG_CATEGORY} resources"
     )
@@ -45,9 +44,9 @@ function(embed_resources TARGET)
     if(NOT INIT_ADDED)
         add_custom_command(
             OUTPUT "${HEADER_FILE}"
-            COMMAND ResourceGenerator init "${HEADER_FILE}"
+            COMMAND ResourceGenerator init "${HEADER_FILE}" "${ARG_NAMESPACE}"
             DEPENDS ResourceGenerator
-            COMMENT "Generating ${ARG_HEADER}"
+            COMMENT "Generating ${ARG_NAMESPACE}.h"
         )
         target_sources(${TARGET} PRIVATE "${HEADER_FILE}")
         target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
@@ -59,7 +58,7 @@ function(embed_resources TARGET)
 endfunction()
 
 function(embed_resource_directory TARGET)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;DIRECTORY;HEADER" "")
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;DIRECTORY;NAMESPACE" "")
 
     file(GLOB_RECURSE FILES "${ARG_DIRECTORY}/*.*")
 
@@ -67,8 +66,8 @@ function(embed_resource_directory TARGET)
     if(DEFINED ARG_CATEGORY)
         list(APPEND FORWARD_ARGS CATEGORY "${ARG_CATEGORY}")
     endif()
-    if(DEFINED ARG_HEADER)
-        list(APPEND FORWARD_ARGS HEADER "${ARG_HEADER}")
+    if(DEFINED ARG_NAMESPACE)
+        list(APPEND FORWARD_ARGS NAMESPACE "${ARG_NAMESPACE}")
     endif()
 
     embed_resources(${TARGET} ${FORWARD_ARGS})
