@@ -26,35 +26,37 @@ function(embed_resources TARGET)
             set(ABSOLUTE_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/${INPUT_FILE}")
         endif()
 
+        set(OUTPUT_C "${GENERATED_DIR}/BinaryResource${FILE_INDEX}.c")
+
+        add_custom_command(
+            OUTPUT "${OUTPUT_C}"
+            COMMAND ResourceGenerator embed "${ABSOLUTE_INPUT}" "${OUTPUT_C}" "${FILE_INDEX}"
+            DEPENDS "${ABSOLUTE_INPUT}" ResourceGenerator
+            COMMENT "Embedding ${INPUT_FILE}"
+        )
+
         list(APPEND ABSOLUTE_FILES "${ABSOLUTE_INPUT}")
-        list(APPEND GENERATED_C_FILES "${GENERATED_DIR}/BinaryResource${FILE_INDEX}.c")
+        list(APPEND GENERATED_C_FILES "${OUTPUT_C}")
         math(EXPR FILE_INDEX "${FILE_INDEX} + 1")
     endforeach()
 
     list(JOIN ABSOLUTE_FILES "," FILES_CSV)
 
     add_custom_command(
-        OUTPUT ${GENERATED_C_FILES} "${ENTRIES_CPP}"
-        COMMAND ResourceGenerator embed "${ENTRIES_CPP}" "${ARG_CATEGORY}" "${ARG_NAMESPACE}" "${FILES_CSV}"
-        DEPENDS ${ABSOLUTE_FILES} ResourceGenerator
-        COMMENT "Embedding ${ARG_CATEGORY} resources"
+        OUTPUT "${HEADER_FILE}" "${ENTRIES_CPP}"
+        COMMAND ResourceGenerator init "${GENERATED_DIR}" "${ARG_NAMESPACE}" "${ARG_CATEGORY}" "${FILES_CSV}"
+        DEPENDS ResourceGenerator
+        COMMENT "Generating ${ARG_NAMESPACE}.h and ${ARG_NAMESPACE}.cpp"
     )
 
     get_target_property(INIT_ADDED ${TARGET} RESOURCE_EMBED_INIT_ADDED)
     if(NOT INIT_ADDED)
-        add_custom_command(
-            OUTPUT "${HEADER_FILE}"
-            COMMAND ResourceGenerator init "${HEADER_FILE}" "${ARG_NAMESPACE}"
-            DEPENDS ResourceGenerator
-            COMMENT "Generating ${ARG_NAMESPACE}.h"
-        )
-        target_sources(${TARGET} PRIVATE "${HEADER_FILE}")
         target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
         target_link_libraries(${TARGET} PUBLIC ResourceEmbedLib)
         set_target_properties(${TARGET} PROPERTIES RESOURCE_EMBED_INIT_ADDED TRUE)
     endif()
 
-    target_sources(${TARGET} PRIVATE ${GENERATED_C_FILES} "${ENTRIES_CPP}")
+    target_sources(${TARGET} PRIVATE ${GENERATED_C_FILES} "${ENTRIES_CPP}" "${HEADER_FILE}")
 endfunction()
 
 function(embed_resource_directory TARGET)
