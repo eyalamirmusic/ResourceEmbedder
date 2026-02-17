@@ -58,16 +58,17 @@ std::vector<std::string> splitComma(const std::string& input)
 
 struct EmbedArgs
 {
-    std::string cppOutput;
-    std::string category;
-    std::string namespaceName;
-    std::vector<std::string> inputFiles;
+    std::string inputFile;
+    std::string outputC;
+    int index;
 };
 
 struct InitArgs
 {
-    std::string headerOutput;
+    std::string outputDir;
     std::string namespaceName;
+    std::string category;
+    std::vector<std::string> inputFiles;
 };
 
 void writeDataFile(const std::string& input,
@@ -110,13 +111,14 @@ void writeDataFile(const std::string& input,
     }
 }
 
-void writeEntriesCpp(const EmbedArgs& args)
+void writeEntriesCpp(const InitArgs& args)
 {
-    auto out = std::ofstream(args.cppOutput);
+    auto cppOutput = args.outputDir + "/" + args.namespaceName + ".cpp";
+    auto out = std::ofstream(cppOutput);
 
     if (!out)
         throw std::runtime_error(
-            "Error: cannot open output file: " + args.cppOutput);
+            "Error: cannot open output file: " + cppOutput);
 
     out << "#include \"ResourceEmbedLib.h\"\n\n";
 
@@ -155,17 +157,18 @@ void writeEntriesCpp(const EmbedArgs& args)
     if (!out)
     {
         throw std::runtime_error(
-            "Error: failed to write output file: " + args.cppOutput);
+            "Error: failed to write output file: " + cppOutput);
     }
 }
 
 void writeInitHeader(const InitArgs& args)
 {
-    auto out = std::ofstream(args.headerOutput);
+    auto headerOutput = args.outputDir + "/" + args.namespaceName + ".h";
+    auto out = std::ofstream(headerOutput);
 
     if (!out)
         throw std::runtime_error(
-            "Error: cannot open header file: " + args.headerOutput);
+            "Error: cannot open header file: " + headerOutput);
 
     out << "#pragma once\n\n";
     out << "#include \"ResourceEmbedLib.h\"\n\n";
@@ -179,24 +182,35 @@ void writeInitHeader(const InitArgs& args)
     if (!out)
     {
         throw std::runtime_error(
-            "Error: failed to write header file: " + args.headerOutput);
+            "Error: failed to write header file: " + headerOutput);
     }
 }
 
 EmbedArgs getEmbedArgs(int argc, char* argv[])
 {
-    if (argc != 4)
+    if (argc != 3)
     {
         throw std::runtime_error(
-            "Usage: ResourceGenerator embed <cpp_output> <category> "
-            "<namespace> <file1,file2,...>");
+            "Usage: ResourceGenerator embed <input_file> <output.c> <index>");
     }
 
-    auto args = EmbedArgs();
+    return {argv[0], argv[1], std::stoi(argv[2])};
+}
 
-    args.cppOutput = argv[0];
-    args.category = argv[1];
-    args.namespaceName = argv[2];
+InitArgs getInitArgs(int argc, char* argv[])
+{
+    if (argc < 4)
+    {
+        throw std::runtime_error(
+            "Usage: ResourceGenerator init <output_dir> <namespace> "
+            "<category> <file1,file2,...>");
+    }
+
+    auto args = InitArgs();
+
+    args.outputDir = argv[0];
+    args.namespaceName = argv[1];
+    args.category = argv[2];
     args.inputFiles = splitComma(argv[3]);
 
     if (args.inputFiles.empty())
@@ -205,33 +219,15 @@ EmbedArgs getEmbedArgs(int argc, char* argv[])
     return args;
 }
 
-InitArgs getInitArgs(int argc, char* argv[])
-{
-    if (argc != 2)
-    {
-        throw std::runtime_error(
-            "Usage: ResourceGenerator init <header_output> <namespace>");
-    }
-
-    return {argv[0], argv[1]};
-}
-
-void writeResources(const EmbedArgs& args)
-{
-    auto outputDir = getDirectory(args.cppOutput);
-
-    for (size_t i = 0; i < args.inputFiles.size(); ++i)
-    {
-        auto varPrefix = "resource_" + std::to_string(i);
-        auto outputC = outputDir + "/BinaryResource"
-                       + std::to_string(i) + ".c";
-        writeDataFile(args.inputFiles[i], outputC, varPrefix);
-    }
-}
-
 void runEmbed(const EmbedArgs& args)
 {
-    writeResources(args);
+    auto varPrefix = "resource_" + std::to_string(args.index);
+    writeDataFile(args.inputFile, args.outputC, varPrefix);
+}
+
+void runInit(const InitArgs& args)
+{
+    writeInitHeader(args);
     writeEntriesCpp(args);
 }
 
@@ -258,7 +254,7 @@ void run(int argc, char* argv[])
     else if (command == "init")
     {
         auto args = getInitArgs(argc - 2, argv + 2);
-        writeInitHeader(args);
+        runInit(args);
     }
     else
     {
