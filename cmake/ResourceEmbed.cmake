@@ -9,11 +9,6 @@ function(embed_resources TARGET)
         set(ARG_HEADER "ResourceData.h")
     endif()
 
-    get_target_property(RESOURCE_INDEX ${TARGET} RESOURCE_EMBED_INDEX)
-    if(NOT RESOURCE_INDEX)
-        set(RESOURCE_INDEX 0)
-    endif()
-
     get_filename_component(HEADER_STEM "${ARG_HEADER}" NAME_WE)
     set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HEADER_STEM}")
     file(MAKE_DIRECTORY "${GENERATED_DIR}")
@@ -21,9 +16,9 @@ function(embed_resources TARGET)
     set(HEADER_FILE "${GENERATED_DIR}/${ARG_HEADER}")
     set(ENTRIES_CPP "${GENERATED_DIR}/${HEADER_STEM}.cpp")
     set(GENERATED_C_FILES "")
-    set(GENERATOR_ARGS "${ENTRIES_CPP}" "${ARG_CATEGORY}")
-    set(INPUT_DEPS "")
+    set(ABSOLUTE_FILES "")
 
+    set(FILE_INDEX 0)
     foreach(INPUT_FILE IN LISTS ARG_FILES)
         cmake_path(IS_ABSOLUTE INPUT_FILE IS_ABS)
         if(IS_ABS)
@@ -31,23 +26,18 @@ function(embed_resources TARGET)
         else()
             set(ABSOLUTE_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/${INPUT_FILE}")
         endif()
-        get_filename_component(RESOURCE_NAME "${INPUT_FILE}" NAME)
-        set(OUTPUT_C "${GENERATED_DIR}/BinaryResource${RESOURCE_INDEX}.c")
 
-        list(APPEND GENERATOR_ARGS "${ABSOLUTE_INPUT}" "${OUTPUT_C}" "${RESOURCE_NAME}")
-        list(APPEND GENERATED_C_FILES "${OUTPUT_C}")
-        list(APPEND INPUT_DEPS "${ABSOLUTE_INPUT}")
-        math(EXPR RESOURCE_INDEX "${RESOURCE_INDEX} + 1")
+        list(APPEND ABSOLUTE_FILES "${ABSOLUTE_INPUT}")
+        list(APPEND GENERATED_C_FILES "${GENERATED_DIR}/BinaryResource${FILE_INDEX}.c")
+        math(EXPR FILE_INDEX "${FILE_INDEX} + 1")
     endforeach()
 
-    set_target_properties(${TARGET} PROPERTIES
-        RESOURCE_EMBED_INDEX ${RESOURCE_INDEX}
-    )
+    list(JOIN ABSOLUTE_FILES "," FILES_CSV)
 
     add_custom_command(
         OUTPUT ${GENERATED_C_FILES} "${ENTRIES_CPP}"
-        COMMAND ResourceGenerator embed ${GENERATOR_ARGS}
-        DEPENDS ${INPUT_DEPS} ResourceGenerator
+        COMMAND ResourceGenerator embed "${ENTRIES_CPP}" "${ARG_CATEGORY}" "${FILES_CSV}"
+        DEPENDS ${ABSOLUTE_FILES} ResourceGenerator
         COMMENT "Embedding ${ARG_CATEGORY} resources"
     )
 

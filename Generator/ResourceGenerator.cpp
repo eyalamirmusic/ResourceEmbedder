@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using Data = std::vector<unsigned char>;
@@ -20,18 +21,46 @@ Data readDataFrom(const std::string& path)
     return data;
 }
 
-struct ResourceTriplet
+std::string getDirectory(const std::string& path)
 {
-    std::string input;
-    std::string outputC;
-    std::string resourceName;
-};
+    auto pos = path.find_last_of("/\\");
+
+    if (pos != std::string::npos)
+        return path.substr(0, pos);
+
+    return ".";
+}
+
+std::string getFilename(const std::string& path)
+{
+    auto pos = path.find_last_of("/\\");
+
+    if (pos != std::string::npos)
+        return path.substr(pos + 1);
+
+    return path;
+}
+
+std::vector<std::string> splitComma(const std::string& input)
+{
+    auto result = std::vector<std::string>();
+    auto stream = std::istringstream(input);
+    auto token = std::string();
+
+    while (std::getline(stream, token, ','))
+    {
+        if (!token.empty())
+            result.push_back(token);
+    }
+
+    return result;
+}
 
 struct EmbedArgs
 {
     std::string cppOutput;
     std::string category;
-    std::vector<ResourceTriplet> resources;
+    std::vector<std::string> inputFiles;
 };
 
 struct InitArgs
@@ -89,7 +118,7 @@ void writeEntriesCpp(const EmbedArgs& args)
 
     out << "#include \"ResourceEmbedLib.h\"\n\n";
 
-    for (size_t i = 0; i < args.resources.size(); ++i)
+    for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
         auto varPrefix = "resource_" + std::to_string(i);
         out << "extern const unsigned char " << varPrefix << "_data[];\n";
@@ -102,14 +131,15 @@ void writeEntriesCpp(const EmbedArgs& args)
     out << "{\n";
     out << "    static const Entries entries = {\n";
 
-    for (size_t i = 0; i < args.resources.size(); ++i)
+    for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
         auto varPrefix = "resource_" + std::to_string(i);
+        auto resourceName = getFilename(args.inputFiles[i]);
         out << "        {" << varPrefix << "_data, " << varPrefix << "_size, \""
-            << args.resources[i].resourceName << "\", \""
+            << resourceName << "\", \""
             << args.category << "\"}";
 
-        if (i + 1 < args.resources.size())
+        if (i + 1 < args.inputFiles.size())
             out << ",";
 
         out << "\n";
@@ -153,22 +183,21 @@ void writeInitHeader(const InitArgs& args)
 
 EmbedArgs getEmbedArgs(int argc, char* argv[])
 {
-    if (argc < 2 || (argc - 2) % 3 != 0)
+    if (argc != 3)
     {
         throw std::runtime_error(
             "Usage: ResourceGenerator embed <cpp_output> <category> "
-            "[<input> <output.c> <resource_name>]...");
+            "<file1,file2,...>");
     }
 
     auto args = EmbedArgs();
 
     args.cppOutput = argv[0];
     args.category = argv[1];
+    args.inputFiles = splitComma(argv[2]);
 
-    for (int i = 2; i < argc; i += 3)
-    {
-        args.resources.emplace_back(argv[i], argv[i + 1], argv[i + 2]);
-    }
+    if (args.inputFiles.empty())
+        throw std::runtime_error("Error: no input files specified");
 
     return args;
 }
@@ -186,12 +215,14 @@ InitArgs getInitArgs(int argc, char* argv[])
 
 void writeResources(const EmbedArgs& args)
 {
-    for (size_t i = 0; i < args.resources.size(); ++i)
+    auto outputDir = getDirectory(args.cppOutput);
+
+    for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
         auto varPrefix = "resource_" + std::to_string(i);
-        writeDataFile(args.resources[i].input,
-                      args.resources[i].outputC,
-                      varPrefix);
+        auto outputC = outputDir + "/BinaryResource"
+                       + std::to_string(i) + ".c";
+        writeDataFile(args.inputFiles[i], outputC, varPrefix);
     }
 }
 
