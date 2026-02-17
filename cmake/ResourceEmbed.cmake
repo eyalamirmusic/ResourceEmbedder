@@ -39,6 +39,7 @@ function(embed_resources TARGET)
             COMMAND ResourceGenerator embed "${ABSOLUTE_INPUT}" "${OUTPUT_C}" "${FILE_INDEX}"
             DEPENDS "${ABSOLUTE_INPUT}" ResourceGenerator
             COMMENT "Embedding ${INPUT_FILE}"
+            VERBATIM
         )
 
         list(APPEND ABSOLUTE_FILES "${ABSOLUTE_INPUT}")
@@ -46,13 +47,26 @@ function(embed_resources TARGET)
         math(EXPR FILE_INDEX "${FILE_INDEX} + 1")
     endforeach()
 
-    list(JOIN ABSOLUTE_FILES "," FILES_CSV)
+    set(INPUT_FILE_LIST "${GENERATED_DIR}/input_file_list")
+    set(newline_delimited_input "")
+    foreach(F IN LISTS ABSOLUTE_FILES)
+        string(APPEND newline_delimited_input "${F}\n")
+    endforeach()
+
+    set(old_input_file_list "")
+    if(EXISTS "${INPUT_FILE_LIST}")
+        file(READ "${INPUT_FILE_LIST}" old_input_file_list)
+    endif()
+    if(NOT "${old_input_file_list}" STREQUAL "${newline_delimited_input}")
+        file(WRITE "${INPUT_FILE_LIST}" "${newline_delimited_input}")
+    endif()
 
     add_custom_command(
         OUTPUT "${HEADER_FILE}" "${ENTRIES_CPP}"
-        COMMAND ResourceGenerator init "${GENERATED_DIR}" "${ARG_NAMESPACE}" "${ARG_CATEGORY}" "${FILES_CSV}"
-        DEPENDS ResourceGenerator
+        COMMAND ResourceGenerator init "${GENERATED_DIR}" "${ARG_NAMESPACE}" "${ARG_CATEGORY}" "${INPUT_FILE_LIST}"
+        DEPENDS ResourceGenerator "${INPUT_FILE_LIST}"
         COMMENT "Generating ${ARG_NAMESPACE}.h and ${ARG_NAMESPACE}.cpp"
+        VERBATIM
     )
 
     target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")

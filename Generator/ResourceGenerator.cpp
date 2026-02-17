@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 using Data = std::vector<unsigned char>;
@@ -41,16 +40,20 @@ std::string getFilename(const std::string& path)
     return path;
 }
 
-std::vector<std::string> splitComma(const std::string& input)
+std::vector<std::string> readFileList(const std::string& path)
 {
-    auto result = std::vector<std::string>();
-    auto stream = std::istringstream(input);
-    auto token = std::string();
+    auto in = std::ifstream(path);
 
-    while (std::getline(stream, token, ','))
+    if (!in)
+        throw std::runtime_error("Error: cannot open file list: " + path);
+
+    auto result = std::vector<std::string>();
+    auto line = std::string();
+
+    while (std::getline(in, line))
     {
-        if (!token.empty())
-            result.push_back(token);
+        if (!line.empty())
+            result.push_back(line);
     }
 
     return result;
@@ -203,7 +206,7 @@ InitArgs getInitArgs(int argc, char* argv[])
     {
         throw std::runtime_error(
             "Usage: ResourceGenerator init <output_dir> <namespace> "
-            "<category> <file1,file2,...>");
+            "<category> <file_list>");
     }
 
     auto args = InitArgs();
@@ -211,7 +214,7 @@ InitArgs getInitArgs(int argc, char* argv[])
     args.outputDir = argv[0];
     args.namespaceName = argv[1];
     args.category = argv[2];
-    args.inputFiles = splitComma(argv[3]);
+    args.inputFiles = readFileList(argv[3]);
 
     if (args.inputFiles.empty())
         throw std::runtime_error("Error: no input files specified");
