@@ -127,12 +127,14 @@ void writeEntriesCpp(const InitArgs& args)
 
     out << "#include \"ResourceEmbedLib.h\"\n\n";
 
+    out << "extern \"C\"\n{\n";
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
         auto varPrefix = args.namespaceName + "_" + std::to_string(i);
         out << "extern const unsigned char " << varPrefix << "_data[];\n";
         out << "extern const unsigned long " << varPrefix << "_size;\n";
     }
+    out << "}\n";
 
     out << "\nnamespace " << args.namespaceName << "\n";
     out << "{\n";

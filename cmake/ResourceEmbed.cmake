@@ -78,7 +78,7 @@ function(embed_resources TARGET)
     target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
     target_link_libraries(${TARGET} PUBLIC ResourceEmbedLib)
     target_sources(${TARGET} PRIVATE ${GENERATED_C_FILES} "${ENTRIES_CPP}" "${HEADER_FILE}")
-    set_source_files_properties(${GENERATED_C_FILES} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+    #set_source_files_properties(${GENERATED_C_FILES} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 endfunction()
 
 function(embed_resource_directory TARGET)
