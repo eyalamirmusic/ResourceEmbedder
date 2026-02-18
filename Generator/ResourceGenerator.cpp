@@ -64,6 +64,7 @@ struct EmbedArgs
     std::string inputFile;
     std::string outputC;
     int index;
+    std::string namespaceName;
 };
 
 struct InitArgs
@@ -127,7 +128,7 @@ void writeEntriesCpp(const InitArgs& args)
 
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
-        auto varPrefix = "resource_" + std::to_string(i);
+        auto varPrefix = args.namespaceName + "_" + std::to_string(i);
         out << "extern const unsigned char " << varPrefix << "_data[];\n";
         out << "extern const unsigned long " << varPrefix << "_size;\n";
     }
@@ -140,7 +141,7 @@ void writeEntriesCpp(const InitArgs& args)
 
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
-        auto varPrefix = "resource_" + std::to_string(i);
+        auto varPrefix = args.namespaceName + "_" + std::to_string(i);
         auto resourceName = getFilename(args.inputFiles[i]);
         out << "        {" << varPrefix << "_data, " << varPrefix << "_size, \""
             << resourceName << "\", \""
@@ -191,13 +192,13 @@ void writeInitHeader(const InitArgs& args)
 
 EmbedArgs getEmbedArgs(int argc, char* argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
         throw std::runtime_error(
-            "Usage: ResourceGenerator embed <input_file> <output.c> <index>");
+            "Usage: ResourceGenerator embed <input_file> <output.c> <index> <namespace>");
     }
 
-    return {argv[0], argv[1], std::stoi(argv[2])};
+    return {argv[0], argv[1], std::stoi(argv[2]), argv[3]};
 }
 
 InitArgs getInitArgs(int argc, char* argv[])
@@ -224,7 +225,7 @@ InitArgs getInitArgs(int argc, char* argv[])
 
 void runEmbed(const EmbedArgs& args)
 {
-    auto varPrefix = "resource_" + std::to_string(args.index);
+    auto varPrefix = args.namespaceName + "_" + std::to_string(args.index);
     writeDataFile(args.inputFile, args.outputC, varPrefix);
 }
 
