@@ -46,6 +46,11 @@ struct DataView
 
     const unsigned char* data() const { return dataView.data(); }
 
+    bool empty() const { return size() == 0; }
+    bool isValid() const { return !empty(); }
+
+    explicit operator bool() const { return isValid(); }
+
     size_t size() const { return dataView.size(); }
     int getSize() const { return static_cast<int>(size()); }
 

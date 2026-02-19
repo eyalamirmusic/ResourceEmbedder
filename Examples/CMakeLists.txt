@@ -1,2 +1,3 @@
 add_subdirectory(Named)
 add_subdirectory(Directory)
+add_subdirectory(SharedLib)
