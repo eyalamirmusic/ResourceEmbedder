@@ -67,6 +67,7 @@ function(res_embed_add TARGET)
     add_custom_command(
         OUTPUT ${REGISTRY_FILES}
         COMMAND ResourceGenerator generate-registry "${CONFIG_FILE}"
+        COMMAND ${CMAKE_COMMAND} -E touch ${REGISTRY_FILES}
         DEPENDS ${CONFIG_FILE} ResourceGenerator
         COMMENT "Generating resource registry for ${ARG_NAMESPACE}"
         VERBATIM
