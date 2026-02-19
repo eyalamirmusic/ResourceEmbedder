@@ -11,4 +11,5 @@ option(RESOURCE_EMBEDDER_TESTS "Build ResourceEmbedder tests" OFF)
 
 if(PROJECT_IS_TOP_LEVEL OR RESOURCE_EMBEDDER_TESTS)
     add_subdirectory(Tests)
+    add_subdirectory(Examples)
 endif()
