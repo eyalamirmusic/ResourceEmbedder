@@ -37,6 +37,7 @@ function(embed_resources TARGET)
     add_custom_command(
         OUTPUT ${GENERATED_FILES}
         COMMAND ResourceGenerator generate "${GENERATED_DIR}" "${ARG_NAMESPACE}" "${ARG_CATEGORY}" ${ABSOLUTE_FILES}
+        COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_FILES}
         DEPENDS ${ABSOLUTE_FILES} ResourceGenerator
         COMMENT "Generating embedded resources for ${ARG_NAMESPACE}"
         VERBATIM
