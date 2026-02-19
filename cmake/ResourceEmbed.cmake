@@ -10,7 +10,7 @@ function(embed_resources TARGET)
     endif()
 
     get_target_property(TARGET_BINARY_DIR ${TARGET} BINARY_DIR)
-    set(GENERATED_DIR "${TARGET_BINARY_DIR}/${TARGET}/${ARG_NAMESPACE}")
+    set(GENERATED_DIR "${TARGET_BINARY_DIR}/${ARG_NAMESPACE}-Generated")
     file(MAKE_DIRECTORY "${GENERATED_DIR}")
 
     set(ABSOLUTE_FILES "")
