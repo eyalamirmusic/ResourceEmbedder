@@ -6,15 +6,29 @@ on:
 
 jobs:
   desktop:
+    name: ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - name: Linux GCC
+            os: ubuntu-latest
+          - name: Linux Clang
+            os: ubuntu-latest
+            cmake-args: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          - name: Windows MSVC
+            os: windows-latest
+          - name: Windows Clang
+            os: windows-latest
+            cmake-args: -T ClangCL
+          - name: macOS
+            os: macos-latest
+            cmake-args: -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -B build -DRESOURCE_EMBEDDER_TESTS=ON
+        run: cmake -B build -DRESOURCE_EMBEDDER_TESTS=ON ${{ matrix.cmake-args }}
       - name: Build
         run: cmake --build build
 
