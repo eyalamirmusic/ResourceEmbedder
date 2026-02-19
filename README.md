@@ -52,7 +52,46 @@ add_executable(MyProject main.cpp)
 res_embed_add(MyProject DIRECTORY Resources)
 ```
 
-Both examples are available under `Examples/` in the repository.
+### Runtime resources with a shared library
+
+A library can use `ResEmbed::get()` to access resources at runtime without embedding them itself. The application that links against it provides the actual resource files. This lets you reuse the same library with different resources per application.
+
+**Lib.cpp** (the shared library):
+
+```cpp
+#include <ResEmbed/ResEmbed.h>
+#include <iostream>
+
+void printResources()
+{
+    if (auto res = ResEmbed::get("Text.txt"))
+        std::cout << res.toString() << std::endl;
+    else
+        std::cout << "Missing Text.txt resource!";
+}
+```
+
+**CMakeLists.txt:**
+
+```cmake
+#Lib only needs to link with ResEmbed
+add_library(Lib STATIC Lib.cpp)
+target_link_libraries(Lib PRIVATE ResEmbed)
+
+# AppA embeds ResourcesA/Text.txt
+add_executable(AppA Main.cpp)
+res_embed_add(AppA DIRECTORY ResourcesA)
+target_link_libraries(AppA PRIVATE Lib)
+
+#AppB embeds ResourcesB/Text.txt
+add_executable(AppB Main.cpp)
+res_embed_add(AppB DIRECTORY ResourcesB)
+target_link_libraries(AppB PRIVATE Lib)
+```
+
+Both apps share the same library code, but each provides its own `Text.txt`. The library checks for the resource with `operator bool` and handles the missing case gracefully.
+
+All examples are available under `Examples/` in the repository.
 
 ## CMake API
 
