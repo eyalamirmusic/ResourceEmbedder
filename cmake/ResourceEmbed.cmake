@@ -50,7 +50,9 @@ endfunction()
 function(embed_resource_directory TARGET)
     cmake_parse_arguments(PARSE_ARGV 1 ARG "" "CATEGORY;DIRECTORY;NAMESPACE" "")
 
-    file(GLOB_RECURSE FILES "${ARG_DIRECTORY}/*.*")
+    file(GLOB_RECURSE FILES
+            CONFIGURE_DEPENDS
+            "${ARG_DIRECTORY}/*.*")
 
     set(FORWARD_ARGS FILES ${FILES})
     if(DEFINED ARG_CATEGORY)
