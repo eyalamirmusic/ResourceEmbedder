@@ -4,11 +4,14 @@ if(PROJECT_NAME)
     set(host_dir "${CMAKE_CURRENT_BINARY_DIR}/_host")
     file(MAKE_DIRECTORY "${host_dir}")
 
+    message(STATUS "Building ResEmbed Generator")
+
     execute_process(
         COMMAND ${CMAKE_COMMAND}
             "${CMAKE_CURRENT_SOURCE_DIR}"
             -DCMAKE_BUILD_TYPE=Release
         WORKING_DIRECTORY "${host_dir}"
+        OUTPUT_QUIET
         RESULT_VARIABLE result)
 
     if(result)
@@ -17,9 +20,10 @@ if(PROJECT_NAME)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND} --build "${host_dir}" --config Release
+        OUTPUT_QUIET
         RESULT_VARIABLE result)
 
-    if(_result)
+    if(result)
         message(FATAL_ERROR "Failed to build ResourceGenerator")
     endif()
 
