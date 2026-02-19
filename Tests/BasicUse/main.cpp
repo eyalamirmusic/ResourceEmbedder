@@ -1,18 +1,18 @@
 #include <BinaryData.h>
+#include "Resources.h"
 #include <iostream>
 
-void printResource(const std::string& name, const std::string& category = "BinaryData")
+void printResource(const std::string& name, const std::string& category)
 {
-    auto d = ResEmbed::get(name, "Custom");
+    auto d = ResEmbed::get(name, category);
     std::cout << d.toString() << std::endl;
 }
 
 int main()
 {
-    printResource("data.bin");
-    printResource("data2.txt");
-    printResource("SRC-ND_INST-Clap_NAME-Shlap!.flac");
-    printResource("data2.txt", "ResEmbed");
+    printResource("data.bin", "Custom");
+    printResource("data2.txt", "Custom");
+    printResource("data2.txt", "Resources");
 
     return 0;
 }
