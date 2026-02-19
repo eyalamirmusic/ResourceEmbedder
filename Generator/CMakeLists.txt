@@ -27,9 +27,19 @@ if(PROJECT_NAME)
         message(FATAL_ERROR "Failed to build ResourceGenerator")
     endif()
 
+    find_program(_resembed_generator_path
+        NAMES ResourceGenerator
+        PATHS "${host_dir}" "${host_dir}/Release"
+        NO_DEFAULT_PATH
+        NO_CACHE)
+
+    if(NOT _resembed_generator_path)
+        message(FATAL_ERROR "Could not find built ResourceGenerator in ${host_dir}")
+    endif()
+
     add_executable(ResourceGenerator IMPORTED GLOBAL)
     set_target_properties(ResourceGenerator PROPERTIES
-        IMPORTED_LOCATION "${host_dir}/ResourceGenerator")
+        IMPORTED_LOCATION "${_resembed_generator_path}")
 else()
     project(ResourceGenerator CXX)
     set(CMAKE_CXX_STANDARD 20)
