@@ -1,4 +1,3 @@
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -195,8 +194,6 @@ GenerateArgs getGenerateArgs(int argc, char* argv[])
 
 void runGenerate(const GenerateArgs& args)
 {
-    std::filesystem::create_directories(args.outputDir);
-
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
         auto varPrefix = args.namespaceName + "_" + std::to_string(i);

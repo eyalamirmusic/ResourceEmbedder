@@ -10,6 +10,7 @@ function(embed_resources TARGET)
     endif()
 
     set(GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAMESPACE}")
+    file(MAKE_DIRECTORY "${GENERATED_DIR}")
 
     set(ABSOLUTE_FILES "")
     foreach(INPUT_FILE IN LISTS ARG_FILES)
