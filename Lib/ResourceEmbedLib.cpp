@@ -1,7 +1,7 @@
 #include "ResourceEmbedLib.h"
 #include <mutex>
 
-namespace Resources
+namespace ResEmbed
 {
 std::mutex mutex;
 
@@ -35,4 +35,4 @@ Initializer::Initializer(const Entries& entries)
 {
     registerEntries(entries);
 }
-} // namespace Resources
+} // namespace ResEmbed

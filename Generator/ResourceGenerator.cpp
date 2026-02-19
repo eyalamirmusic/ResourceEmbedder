@@ -126,9 +126,9 @@ std::string generateEntriesCpp(const GenerateArgs& args)
 
     out << "\nnamespace " << args.namespaceName << "\n";
     out << "{\n";
-    out << "const Resources::Entries& getResourceEntries()\n";
+    out << "const ResEmbed::Entries& getResourceEntries()\n";
     out << "{\n";
-    out << "    static const Resources::Entries entries = {\n";
+    out << "    static const ResEmbed::Entries entries = {\n";
 
     for (size_t i = 0; i < args.inputFiles.size(); ++i)
     {
@@ -160,8 +160,8 @@ std::string generateInitHeader(const GenerateArgs& args)
     out << "#include \"ResourceEmbedLib.h\"\n\n";
     out << "namespace " << args.namespaceName << "\n";
     out << "{\n";
-    out << "const Resources::Entries& getResourceEntries();\n";
-    out << "static const Resources::Initializer resourceInitializer "
+    out << "const ResEmbed::Entries& getResourceEntries();\n";
+    out << "static const ResEmbed::Initializer resourceInitializer "
         << "{getResourceEntries()};\n";
     out << "}\n";
 

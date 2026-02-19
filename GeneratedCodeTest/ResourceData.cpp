@@ -6,7 +6,7 @@ extern const unsigned long resource_0_size;
 
 #include "ResourceEmbedLib.h"
 
-namespace Resources
+namespace ResEmbed
 {
 const Entries& getResourceEntries()
 {

@@ -2,7 +2,7 @@
 
 #include "ResourceEmbedLib.h"
 
-namespace Resources
+namespace ResEmbed
 {
 const Entries& getResourceEntries();
 static const Initializer resourceInitializer {getResourceEntries()};

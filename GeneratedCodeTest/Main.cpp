@@ -5,7 +5,7 @@ struct StaticLoader
 {
     StaticLoader()
     {
-        std::cout << Resources::get("data.txt").toString() << std::endl;
+        std::cout << ResEmbed::get("data.txt").toString() << std::endl;
     }
 };
 

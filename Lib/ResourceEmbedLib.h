@@ -5,13 +5,13 @@
 #include <string>
 #include <vector>
 
-namespace Resources
+namespace ResEmbed
 {
 using View = std::span<const unsigned char>;
 using ResourceMap = std::map<std::string, View>;
 using CategoryMap = std::map<std::string, ResourceMap>;
 
-inline constexpr auto DefaultCategory = "Resources";
+inline constexpr auto DefaultCategory = "ResEmbed";
 
 struct Entry
 {
@@ -20,7 +20,7 @@ struct Entry
     Entry(const unsigned char* dataToUse,
           unsigned long sizeToUse,
           const char* nameToUse,
-          const char* categoryToUse = "Resources")
+          const char* categoryToUse = "ResEmbed")
         : data(dataToUse, sizeToUse), name(nameToUse), category(categoryToUse) {}
 
     View data;
@@ -63,4 +63,4 @@ struct Initializer
 {
     Initializer(const Entries& entries);
 };
-} // namespace Resources
+} // namespace ResEmbed
