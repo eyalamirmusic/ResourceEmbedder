@@ -8,8 +8,7 @@
 namespace ResEmbed
 {
 using View = std::span<const unsigned char>;
-using ResourceMap = std::map<std::string, View>;
-using CategoryMap = std::map<std::string, ResourceMap>;
+
 
 inline constexpr auto defaultCategory = "Resources";
 
@@ -54,6 +53,9 @@ struct DataView
 
     View dataView;
 };
+
+using ResourceMap = std::map<std::string, DataView>;
+using CategoryMap = std::map<std::string, ResourceMap>;
 
 DataView get(const std::string& name, const std::string& category = defaultCategory);
 
