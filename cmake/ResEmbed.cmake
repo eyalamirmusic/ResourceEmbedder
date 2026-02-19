@@ -37,25 +37,42 @@ function(res_embed_add TARGET)
         )
     endforeach()
 
-    set(GENERATED_FILES "${GENERATED_DIR}/${ARG_NAMESPACE}.h" "${GENERATED_DIR}/${ARG_NAMESPACE}.cpp")
+    set(DATA_FILES "")
     list(LENGTH ABSOLUTE_FILES FILE_COUNT)
     if(FILE_COUNT GREATER 0)
         math(EXPR LAST_INDEX "${FILE_COUNT} - 1")
         foreach(I RANGE ${LAST_INDEX})
-            list(APPEND GENERATED_FILES "${GENERATED_DIR}/BinaryResource${I}.c")
+            list(GET ABSOLUTE_FILES ${I} INPUT_FILE)
+            set(OUTPUT_FILE "${GENERATED_DIR}/BinaryResource${I}.c")
+            set(VAR_PREFIX "${ARG_NAMESPACE}_${I}")
+
+            add_custom_command(
+                OUTPUT "${OUTPUT_FILE}"
+                COMMAND ResourceGenerator generate-data "${OUTPUT_FILE}" "${VAR_PREFIX}" "${INPUT_FILE}"
+                DEPENDS "${INPUT_FILE}" ResourceGenerator
+                COMMENT "Embedding ${INPUT_FILE}"
+                VERBATIM
+            )
+
+            list(APPEND DATA_FILES "${OUTPUT_FILE}")
         endforeach()
     endif()
 
+    set(CONFIG_FILE "${GENERATED_DIR}/${ARG_NAMESPACE}.cfg")
+    list(JOIN ABSOLUTE_FILES "\n" FILE_LIST)
+    file(WRITE "${CONFIG_FILE}" "${GENERATED_DIR}\n${ARG_NAMESPACE}\n${ARG_CATEGORY}\n${FILE_LIST}\n")
+
+    set(REGISTRY_FILES "${GENERATED_DIR}/${ARG_NAMESPACE}.h" "${GENERATED_DIR}/${ARG_NAMESPACE}.cpp")
+
     add_custom_command(
-        OUTPUT ${GENERATED_FILES}
-        COMMAND ResourceGenerator generate "${GENERATED_DIR}" "${ARG_NAMESPACE}" "${ARG_CATEGORY}" ${ABSOLUTE_FILES}
-        COMMAND ${CMAKE_COMMAND} -E touch ${GENERATED_FILES}
-        DEPENDS ${ABSOLUTE_FILES} ResourceGenerator
-        COMMENT "Generating embedded resources for ${ARG_NAMESPACE}"
+        OUTPUT ${REGISTRY_FILES}
+        COMMAND ResourceGenerator generate-registry "${CONFIG_FILE}"
+        DEPENDS ${CONFIG_FILE} ResourceGenerator
+        COMMENT "Generating resource registry for ${ARG_NAMESPACE}"
         VERBATIM
     )
 
     target_include_directories(${TARGET} PUBLIC "${GENERATED_DIR}")
     target_link_libraries(${TARGET} PUBLIC ResourceEmbedLib)
-    target_sources(${TARGET} PRIVATE ${GENERATED_FILES})
+    target_sources(${TARGET} PRIVATE ${DATA_FILES} ${REGISTRY_FILES})
 endfunction()

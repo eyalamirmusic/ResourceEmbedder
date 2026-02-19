@@ -22,16 +22,6 @@ Data readDataFrom(const std::string& path)
     return data;
 }
 
-std::string getDirectory(const std::string& path)
-{
-    auto pos = path.find_last_of("/\\");
-
-    if (pos != std::string::npos)
-        return path.substr(0, pos);
-
-    return ".";
-}
-
 std::string getFilename(const std::string& path)
 {
     auto pos = path.find_last_of("/\\");
@@ -70,14 +60,6 @@ bool writeFileIfChanged(const std::string& path, const std::string& content)
     return true;
 }
 
-struct GenerateArgs
-{
-    std::string outputDir;
-    std::string namespaceName;
-    std::string category;
-    std::vector<std::string> inputFiles;
-};
-
 std::string generateDataFile(const std::string& input,
                              const std::string& varPrefix)
 {
@@ -109,36 +91,38 @@ std::string generateDataFile(const std::string& input,
     return out.str();
 }
 
-std::string generateEntriesCpp(const GenerateArgs& args)
+std::string generateEntriesCpp(const std::string& namespaceName,
+                               const std::string& category,
+                               const std::vector<std::string>& inputFiles)
 {
     auto out = std::ostringstream();
 
     out << "#include <ResEmbed/ResEmbed.h>\n\n";
 
     out << "extern \"C\"\n{\n";
-    for (size_t i = 0; i < args.inputFiles.size(); ++i)
+    for (size_t i = 0; i < inputFiles.size(); ++i)
     {
-        auto varPrefix = args.namespaceName + "_" + std::to_string(i);
+        auto varPrefix = namespaceName + "_" + std::to_string(i);
         out << "extern const unsigned char " << varPrefix << "_data[];\n";
         out << "extern const unsigned long " << varPrefix << "_size;\n";
     }
     out << "}\n";
 
-    out << "\nnamespace " << args.namespaceName << "\n";
+    out << "\nnamespace " << namespaceName << "\n";
     out << "{\n";
     out << "const ResEmbed::Entries& getResourceEntries()\n";
     out << "{\n";
     out << "    static const ResEmbed::Entries entries = {\n";
 
-    for (size_t i = 0; i < args.inputFiles.size(); ++i)
+    for (size_t i = 0; i < inputFiles.size(); ++i)
     {
-        auto varPrefix = args.namespaceName + "_" + std::to_string(i);
-        auto resourceName = getFilename(args.inputFiles[i]);
+        auto varPrefix = namespaceName + "_" + std::to_string(i);
+        auto resourceName = getFilename(inputFiles[i]);
         out << "        {" << varPrefix << "_data, " << varPrefix << "_size, \""
             << resourceName << "\", \""
-            << args.category << "\"}";
+            << category << "\"}";
 
-        if (i + 1 < args.inputFiles.size())
+        if (i + 1 < inputFiles.size())
             out << ",";
 
         out << "\n";
@@ -152,13 +136,13 @@ std::string generateEntriesCpp(const GenerateArgs& args)
     return out.str();
 }
 
-std::string generateInitHeader(const GenerateArgs& args)
+std::string generateInitHeader(const std::string& namespaceName)
 {
     auto out = std::ostringstream();
 
     out << "#pragma once\n\n";
     out << "#include <ResEmbed/ResEmbed.h>\n\n";
-    out << "namespace " << args.namespaceName << "\n";
+    out << "namespace " << namespaceName << "\n";
     out << "{\n";
     out << "const ResEmbed::Entries& getResourceEntries();\n";
     out << "static const ResEmbed::Initializer resourceInitializer "
@@ -168,48 +152,65 @@ std::string generateInitHeader(const GenerateArgs& args)
     return out.str();
 }
 
-GenerateArgs getGenerateArgs(int argc, char* argv[])
+struct ConfigFile
 {
-    if (argc < 4)
+    std::string outputDir;
+    std::string namespaceName;
+    std::string category;
+    std::vector<std::string> inputFiles;
+};
+
+ConfigFile readConfigFile(const std::string& path)
+{
+    auto in = std::ifstream(path);
+
+    if (!in)
+        throw std::runtime_error("Error: cannot open config file: " + path);
+
+    auto config = ConfigFile();
+    auto line = std::string();
+
+    if (!std::getline(in, config.outputDir) || config.outputDir.empty())
+        throw std::runtime_error("Error: config file missing output directory");
+
+    if (!std::getline(in, config.namespaceName) || config.namespaceName.empty())
+        throw std::runtime_error("Error: config file missing namespace");
+
+    if (!std::getline(in, config.category) || config.category.empty())
+        throw std::runtime_error("Error: config file missing category");
+
+    while (std::getline(in, line))
     {
-        throw std::runtime_error(
-            "Usage: ResourceGenerator generate <output_dir> <namespace> "
-            "<category> file1 [file2 ...]");
+        if (!line.empty())
+            config.inputFiles.push_back(line);
     }
 
-    auto args = GenerateArgs();
+    if (config.inputFiles.empty())
+        throw std::runtime_error("Error: config file contains no input files");
 
-    args.outputDir = argv[0];
-    args.namespaceName = argv[1];
-    args.category = argv[2];
-
-    for (int i = 3; i < argc; ++i)
-        args.inputFiles.emplace_back(argv[i]);
-
-    if (args.inputFiles.empty())
-        throw std::runtime_error("Error: no input files specified");
-
-    return args;
+    return config;
 }
 
-void runGenerate(const GenerateArgs& args)
+void runGenerateData(const std::string& outputPath,
+                     const std::string& varPrefix,
+                     const std::string& inputFile)
 {
-    for (size_t i = 0; i < args.inputFiles.size(); ++i)
-    {
-        auto varPrefix = args.namespaceName + "_" + std::to_string(i);
-        auto outputPath = args.outputDir + "/BinaryResource"
-            + std::to_string(i) + ".c";
-        auto content = generateDataFile(args.inputFiles[i], varPrefix);
-        writeFileIfChanged(outputPath, content);
-    }
+    auto content = generateDataFile(inputFile, varPrefix);
+    writeFileIfChanged(outputPath, content);
+}
 
-    auto headerContent = generateInitHeader(args);
-    writeFileIfChanged(
-        args.outputDir + "/" + args.namespaceName + ".h", headerContent);
+void runGenerateRegistry(const std::string& configPath)
+{
+    auto config = readConfigFile(configPath);
 
-    auto cppContent = generateEntriesCpp(args);
     writeFileIfChanged(
-        args.outputDir + "/" + args.namespaceName + ".cpp", cppContent);
+        config.outputDir + "/" + config.namespaceName + ".h",
+        generateInitHeader(config.namespaceName));
+
+    writeFileIfChanged(
+        config.outputDir + "/" + config.namespaceName + ".cpp",
+        generateEntriesCpp(config.namespaceName, config.category,
+                           config.inputFiles));
 }
 
 std::string parseCommand(int argc, char* argv[])
@@ -217,7 +218,10 @@ std::string parseCommand(int argc, char* argv[])
     if (argc < 2)
     {
         throw std::runtime_error(
-            "Usage: ResourceGenerator generate ...");
+            "Usage: ResourceGenerator <command> ...\n"
+            "Commands:\n"
+            "  generate-data <output.c> <var_prefix> <input_file>\n"
+            "  generate-registry <config_file>");
     }
 
     return {argv[1]};
@@ -227,16 +231,30 @@ void run(int argc, char* argv[])
 {
     auto command = parseCommand(argc, argv);
 
-    if (command == "generate")
+    if (command == "generate-data")
     {
-        auto args = getGenerateArgs(argc - 2, argv + 2);
-        runGenerate(args);
+        if (argc != 5)
+        {
+            throw std::runtime_error(
+                "Usage: ResourceGenerator generate-data "
+                "<output.c> <var_prefix> <input_file>");
+        }
+
+        runGenerateData(argv[2], argv[3], argv[4]);
+    }
+    else if (command == "generate-registry")
+    {
+        if (argc != 3)
+        {
+            throw std::runtime_error(
+                "Usage: ResourceGenerator generate-registry <config_file>");
+        }
+
+        runGenerateRegistry(argv[2]);
     }
     else
     {
-        throw std::runtime_error(
-            "Unknown command: " + command +
-            "\nUsage: ResourceGenerator generate ...");
+        throw std::runtime_error("Unknown command: " + command);
     }
 }
 
